@@ -1,0 +1,209 @@
+<div class="page-header">
+    <h1>Gestión de Usuarios</h1>
+</div>
+
+@if (isLoading()) {
+<mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (errorMessage()) {
+<mat-card class="error-banner" appearance="outlined">
+    <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <span>{{ errorMessage() }}</span>
+    </mat-card-content>
+</mat-card>
+}
+
+<div class="users-grid">
+    <!-- Formulario de Creación / Edición -->
+    <mat-card appearance="outlined">
+        <mat-card-header>
+            <mat-card-title>
+                {{ editingId() ? 'Editar Usuario' : 'Nuevo Usuario' }}
+            </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+            <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form">
+                <mat-form-field appearance="outline">
+                    <mat-label>Nombre Completo</mat-label>
+                    <input matInput formControlName="fullName" placeholder="Ej. Ana García" />
+                    @if (userForm.controls.fullName.invalid && userForm.controls.fullName.touched) {
+                    <mat-error>Ingresa al menos 3 caracteres</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Correo Electrónico</mat-label>
+                    <input matInput type="email" formControlName="email" placeholder="usuario@institucion.edu" />
+                    @if (userForm.controls.email.invalid && userForm.controls.email.touched) {
+                    <mat-error>Ingresa un correo electrónico válido</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>
+                        {{ editingId() ? 'Nueva Contraseña (opcional)' : 'Contraseña' }}
+                    </mat-label>
+                    <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password" />
+                    <button mat-icon-button matSuffix type="button" (click)="hidePassword.set(!hidePassword())">
+                        <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    </button>
+                    @if (userForm.controls.password.invalid && userForm.controls.password.touched) {
+                    <mat-error>Mínimo 8 caracteres</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Rol</mat-label>
+                    <mat-select formControlName="role">
+                        <mat-option value="ORGANIZER">Organizador (ORGANIZER)</mat-option>
+                        <mat-option value="ADMIN">Administrador (ADMIN)</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Departamento (Opcional)</mat-label>
+                    <mat-select formControlName="departmentId">
+                        <mat-option [value]="null">-- Sin departamento --</mat-option>
+                        @for (dept of activeDepartments(); track dept.id) {
+                        <mat-option [value]="dept.id">{{ dept.name }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="isLoading()">
+                        <mat-icon>{{ editingId() ? 'save' : 'person_add' }}</mat-icon>
+                        {{ editingId() ? 'Guardar Cambios' : 'Crear Usuario' }}
+                    </button>
+
+                    @if (editingId()) {
+                    <button mat-stroked-button type="button" (click)="resetForm()">
+                        Cancelar
+                    </button>
+                    }
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Panel Derecho: Filtros + Tabla -->
+    <div class="list-column">
+        <!-- Barra de Filtros -->
+        <mat-card appearance="outlined" class="filters-card">
+            <mat-card-content>
+                <form [formGroup]="filterForm" (ngSubmit)="applyFilters()" class="filters-bar">
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                        <mat-label>Buscar nombre o correo</mat-label>
+                        <input matInput formControlName="search" placeholder="Buscar..." />
+                        <mat-icon matSuffix>search</mat-icon>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                        <mat-label>Rol</mat-label>
+                        <mat-select formControlName="role" (selectionChange)="applyFilters()">
+                            <mat-option value="">Todos</mat-option>
+                            <mat-option value="ORGANIZER">ORGANIZER</mat-option>
+                            <mat-option value="ADMIN">ADMIN</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                        <mat-label>Departamento</mat-label>
+                        <mat-select formControlName="departmentId" (selectionChange)="applyFilters()">
+                            <mat-option value="">Todos</mat-option>
+                            @for (dept of departments(); track dept.id) {
+                            <mat-option [value]="dept.id">{{ dept.name }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                        <mat-label>Estado</mat-label>
+                        <mat-select formControlName="isActive" (selectionChange)="applyFilters()">
+                            <mat-option value="">Todos</mat-option>
+                            <mat-option [value]="true">Activos</mat-option>
+                            <mat-option [value]="false">Inactivos</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <div class="filter-buttons">
+                        <button mat-flat-button color="primary" type="submit">Filtrar</button>
+                        <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+                    </div>
+                </form>
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Tabla de Usuarios -->
+        <mat-card appearance="outlined">
+            <mat-card-content>
+                <table mat-table [dataSource]="users()" class="mat-elevation-z0 full-width-table">
+                    <!-- Nombre -->
+                    <ng-container matColumnDef="fullName">
+                        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                        <td mat-cell *matCellDef="let user">{{ user.fullName }}</td>
+                    </ng-container>
+
+                    <!-- Email -->
+                    <ng-container matColumnDef="email">
+                        <th mat-header-cell *matHeaderCellDef>Correo</th>
+                        <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+                    </ng-container>
+
+                    <!-- Rol -->
+                    <ng-container matColumnDef="role">
+                        <th mat-header-cell *matHeaderCellDef>Rol</th>
+                        <td mat-cell *matCellDef="let user">
+                            <span class="role-badge" [class.role-admin]="user.role === 'ADMIN'">
+                                {{ user.role }}
+                            </span>
+                        </td>
+                    </ng-container>
+
+                    <!-- Departamento -->
+                    <ng-container matColumnDef="department">
+                        <th mat-header-cell *matHeaderCellDef>Departamento</th>
+                        <td mat-cell *matCellDef="let user">{{ getDepartmentName(user) }}</td>
+                    </ng-container>
+
+                    <!-- Estado -->
+                    <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef>Estado</th>
+                        <td mat-cell *matCellDef="let user">
+                            <mat-chip [highlighted]="user.isActive">
+                                {{ user.isActive ? 'Activo' : 'Inactivo' }}
+                            </mat-chip>
+                        </td>
+                    </ng-container>
+
+                    <!-- Acciones -->
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                        <td mat-cell *matCellDef="let user">
+                            <button mat-icon-button color="primary" (click)="startEdit(user)" title="Editar">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button [color]="user.isActive ? 'warn' : 'primary'"
+                                (click)="toggleStatus(user)" [title]="user.isActive ? 'Desactivar' : 'Activar'">
+                                <mat-icon>{{ user.isActive ? 'person_off' : 'person' }}</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.row-inactive]="!row.isActive">
+                    </tr>
+
+                    <tr class="mat-row" *matNoDataRow>
+                        <td class="mat-cell empty-cell" colspan="6">
+                            No se encontraron usuarios con los criterios actuales.
+                        </td>
+                    </tr>
+                </table>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div>

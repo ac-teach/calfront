@@ -1,0 +1,8 @@
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: false
+  lmdb: false
+  msgpackr-extract: false
+minimumReleaseAgeExclude:
+  - '@angular/cdk@22.2.4'
+  - '@angular/material@22.2.4'

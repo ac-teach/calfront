@@ -1,12 +1,50 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+
+interface NavItem {
+  label: string;
+  route: string;
+  icon: string;
+}
 
 @Component({
-  imports: [RouterOutlet],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    MatToolbarModule,
+    MatSidenavModule,
+    MatListModule,
+    MatIconModule,
+    MatButtonModule,
+  ],
   selector: 'app-root',
   styleUrl: './app.scss',
   templateUrl: './app.html',
+  standalone: true,
 })
 export class App {
   protected readonly title = signal('calfront');
+}
+
+export class AppComponet {
+  isSidenadOpen = signal(true);
+
+  navItems: NavItem[] = [
+    { label: 'Categorias', route: '/categories', icon: 'category' },
+    { label: 'Departamentos', route: '/departments', icon: 'domain' },
+    { label: 'Ubicaciones', route: '/locations', icon: 'place' },
+    { label: 'Usuarios', route: '/users', icon: 'group' },
+    { label: 'Eventos', route: '/events', icon: 'event' },
+  ];
+
+  toggleSidenav(): void {
+    this.isSidenadOpen.update((val) => !val);
+  }
 }

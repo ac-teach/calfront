@@ -1,0 +1,88 @@
+<section class="categories-container">
+    <header>
+        <h1>Gestión de Categorías</h1>
+    </header>
+
+    @if (errorMessage()) {
+    <div class="alert-error" role="alert">
+        <strong>Error:</strong> {{ errorMessage() }}
+    </div>
+    }
+
+    <div class="content-grid">
+        <!-- Formulario de Creación / Edición -->
+        <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="category-form">
+            <h2>{{ editingId() ? 'Editar Categoría' : 'Nueva Categoría' }}</h2>
+
+            <div class="form-field">
+                <label for="name">Nombre *</label>
+                <input id="name" type="text" formControlName="name" (input)="generateSlug()" />
+            </div>
+
+            <div class="form-field">
+                <label for="slug">Slug *</label>
+                <input id="slug" type="text" formControlName="slug" />
+            </div>
+
+            <div class="form-field">
+                <label for="color">Color *</label>
+                <input id="color" type="color" formControlName="color" />
+            </div>
+
+            <div class="form-field">
+                <label for="icon">Icono (opcional)</label>
+                <input id="icon" type="text" formControlName="icon" placeholder="ej. calendar_today" />
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" [disabled]="isLoading()">
+                    {{ editingId() ? 'Actualizar' : 'Crear' }}
+                </button>
+                @if (editingId()) {
+                <button type="button" (click)="resetForm()">Cancelar</button>
+                }
+            </div>
+        </form>
+
+        <!-- Listado de Categorías -->
+        <div class="categories-list">
+            @if (isLoading()) {
+            <p>Cargando categorías...</p>
+            } @else {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Color</th>
+                        <th>Nombre</th>
+                        <th>Slug</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (cat of categories(); track cat.id) {
+                    <tr [class.inactive]="!cat.isActive">
+                        <td>
+                            <span class="color-dot" [style.background-color]="cat.color"></span>
+                        </td>
+                        <td>{{ cat.name }}</td>
+                        <td><code>{{ cat.slug }}</code></td>
+                        <td>{{ cat.isActive ? 'Activa' : 'Inactiva' }}</td>
+                        <td>
+                            <button type="button" (click)="startEdit(cat)">Editar</button>
+                            <button type="button" (click)="toggleStatus(cat)">
+                                {{ cat.isActive ? 'Desactivar' : 'Reactivar' }}
+                            </button>
+                        </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                        <td colspan="5">No hay categorías registradas.</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+            }
+        </div>
+    </div>
+</section>

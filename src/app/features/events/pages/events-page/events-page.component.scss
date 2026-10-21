@@ -1,0 +1,132 @@
+.page-header {
+    margin-bottom: 16px;
+
+    h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 500;
+    }
+}
+
+.error-banner {
+    margin-bottom: 16px;
+    border-color: #ef4444;
+    background-color: #fef2f2;
+
+    mat-card-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #b91c1c;
+    }
+}
+
+.events-grid {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 24px;
+    align-items: start;
+
+    @media (max-width: 1100px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.event-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.date-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.range-error {
+    color: #dc2626;
+    font-size: 0.8rem;
+    margin-top: -8px;
+    margin-bottom: 8px;
+}
+
+.recurrence-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    background-color: #f1f5f9;
+    border-radius: 8px;
+    margin-top: 4px;
+}
+
+.list-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.filters-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: center;
+
+    @media (max-width: 960px) {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.detail-card {
+    background-color: #f8fafc;
+    border-left: 4px solid #3b82f6;
+
+    .detail-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+        font-size: 0.9rem;
+    }
+}
+
+.schedule-cell {
+    display: flex;
+    flex-direction: column;
+
+    small {
+        color: #64748b;
+    }
+}
+
+.rec-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background-color: #e0e7ff;
+    color: #3730a3;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.full-width-table {
+    width: 100%;
+}
+
+.row-cancelled {
+    opacity: 0.55;
+}
+
+.empty-cell {
+    text-align: center;
+    padding: 24px;
+    color: #64748b;
+}

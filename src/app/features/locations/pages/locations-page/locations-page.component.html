@@ -1,0 +1,145 @@
+<div class="page-header">
+    <h1>Gestión de Ubicaciones</h1>
+</div>
+
+@if (isLoading()) {
+<mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (errorMessage()) {
+<mat-card class="error-banner" appearance="outlined">
+    <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <span>{{ errorMessage() }}</span>
+    </mat-card-content>
+</mat-card>
+}
+
+<div class="locations-grid">
+    <!-- Formulario -->
+    <mat-card appearance="outlined">
+        <mat-card-header>
+            <mat-card-title>
+                {{ editingId() ? 'Editar Ubicación' : 'Nueva Ubicación' }}
+            </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+            <form [formGroup]="locationForm" (ngSubmit)="onSubmit()" class="loc-form">
+                <mat-form-field appearance="outline">
+                    <mat-label>Nombre de la Ubicación</mat-label>
+                    <input matInput formControlName="name" placeholder="Ej. Sala de Juntas A / Google Meet" />
+                    @if (locationForm.controls.name.invalid && locationForm.controls.name.touched) {
+                    <mat-error>El nombre es obligatorio (mín. 2 caracteres)</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Capacidad (Opcional)</mat-label>
+                    <input matInput type="number" min="1" formControlName="capacity" placeholder="Ej. 25" />
+                    @if (locationForm.controls.capacity.invalid && locationForm.controls.capacity.touched) {
+                    <mat-error>Ingresa un número entero positivo</mat-error>
+                    }
+                </mat-form-field>
+
+                <div class="toggles-group">
+                    <mat-slide-toggle formControlName="isVirtual" color="primary">
+                        Ubicación Virtual (Online)
+                    </mat-slide-toggle>
+
+                    <mat-slide-toggle formControlName="isExclusive" color="primary">
+                        Uso Exclusivo (Evita traslapes de horario)
+                    </mat-slide-toggle>
+                </div>
+
+                <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="isLoading()">
+                        <mat-icon>{{ editingId() ? 'save' : 'add_location_alt' }}</mat-icon>
+                        {{ editingId() ? 'Guardar Cambios' : 'Crear Ubicación' }}
+                    </button>
+
+                    @if (editingId()) {
+                    <button mat-stroked-button type="button" (click)="resetForm()">
+                        Cancelar
+                    </button>
+                    }
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Tabla de Ubicaciones -->
+    <mat-card appearance="outlined">
+        <mat-card-header>
+            <mat-card-title>Ubicaciones Registradas</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+            <table mat-table [dataSource]="locations()" class="mat-elevation-z0 full-width-table">
+                <!-- Columna Nombre -->
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                    <td mat-cell *matCellDef="let loc">{{ loc.name }}</td>
+                </ng-container>
+
+                <!-- Columna Tipo (Física / Virtual) -->
+                <ng-container matColumnDef="type">
+                    <th mat-header-cell *matHeaderCellDef>Modalidad</th>
+                    <td mat-cell *matCellDef="let loc">
+                        <span class="type-cell">
+                            <mat-icon>{{ loc.isVirtual ? 'videocam' : 'meeting_room' }}</mat-icon>
+                            {{ loc.isVirtual ? 'Virtual' : 'Física' }}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Columna Capacidad -->
+                <ng-container matColumnDef="capacity">
+                    <th mat-header-cell *matHeaderCellDef>Capacidad</th>
+                    <td mat-cell *matCellDef="let loc">
+                        {{ loc.capacity ? loc.capacity + ' personas' : 'Sin límite' }}
+                    </td>
+                </ng-container>
+
+                <!-- Columna Exclusividad -->
+                <ng-container matColumnDef="exclusive">
+                    <th mat-header-cell *matHeaderCellDef>Exclusiva</th>
+                    <td mat-cell *matCellDef="let loc">
+                        {{ loc.isExclusive ? 'Sí' : 'No' }}
+                    </td>
+                </ng-container>
+
+                <!-- Columna Estado -->
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Estado</th>
+                    <td mat-cell *matCellDef="let loc">
+                        <mat-chip [highlighted]="loc.isActive">
+                            {{ loc.isActive ? 'Activa' : 'Inactiva' }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <!-- Columna Acciones -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                    <td mat-cell *matCellDef="let loc">
+                        <button mat-icon-button color="primary" (click)="startEdit(loc)" title="Editar">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button [color]="loc.isActive ? 'warn' : 'primary'" (click)="toggleStatus(loc)"
+                            [title]="loc.isActive ? 'Desactivar' : 'Activar'">
+                            <mat-icon>{{ loc.isActive ? 'visibility_off' : 'visibility' }}</mat-icon>
+                        </button>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.row-inactive]="!row.isActive"></tr>
+
+                <tr class="mat-row" *matNoDataRow>
+                    <td class="mat-cell empty-cell" colspan="6">No hay ubicaciones registradas.</td>
+                </tr>
+            </table>
+        </mat-card-content>
+    </mat-card>
+</div>

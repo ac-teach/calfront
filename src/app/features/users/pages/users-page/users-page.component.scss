@@ -1,0 +1,97 @@
+.page-header {
+    margin-bottom: 16px;
+
+    h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 500;
+    }
+}
+
+.error-banner {
+    margin-bottom: 16px;
+    border-color: #ef4444;
+    background-color: #fef2f2;
+
+    mat-card-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #b91c1c;
+    }
+}
+
+.users-grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    align-items: start;
+
+    @media (max-width: 1024px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.user-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.list-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.filters-bar {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: center;
+
+    @media (max-width: 1280px) {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.full-width-table {
+    width: 100%;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background-color: #e2e8f0;
+    color: #334155;
+
+    &.role-admin {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+}
+
+.row-inactive {
+    opacity: 0.55;
+}
+
+.empty-cell {
+    text-align: center;
+    padding: 24px;
+    color: #64748b;
+}
