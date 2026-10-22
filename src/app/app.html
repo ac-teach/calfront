@@ -1,20 +1,28 @@
+@if (authService.isAuthenticated()) {
 <div class="app-container">
   <mat-toolbar color="primary" class="app-toolbar">
     <button mat-icon-button (click)="toggleSidenav()" aria-label="Alternar menú">
       <mat-icon>menu</mat-icon>
     </button>
     <span class="app-title">Agenda Institucional</span>
+    <span class="spacer"></span>
+    <span class="user-greeting">{{ authService.currentUser()?.fullName }}</span>
+    <button mat-icon-button (click)="logout()" title="Cerrar sesión">
+      <mat-icon>logout</mat-icon>
+    </button>
   </mat-toolbar>
 
   <mat-sidenav-container class="sidenav-container">
     <mat-sidenav [opened]="isSidenavOpen()" mode="side" class="app-sidenav">
       <mat-nav-list>
         @for (item of navItems; track item.route) {
+        @if (!item.adminOnly || authService.isAdmin()) {
         <a mat-list-item [routerLink]="item.route" routerLinkActive="active-link" #rla="routerLinkActive"
           [activated]="rla.isActive">
           <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
           <span matListItemTitle>{{ item.label }}</span>
         </a>
+        }
         }
       </mat-nav-list>
     </mat-sidenav>
@@ -24,3 +32,8 @@
     </mat-sidenav-content>
   </mat-sidenav-container>
 </div>
+} @else {
+<main class="auth-wrapper">
+  <router-outlet />
+</main>
+}
