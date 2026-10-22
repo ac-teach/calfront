@@ -9,15 +9,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: '',
-    redirectTo: 'categories',
-    pathMatch: 'full',
-  },
-  {
-    path: '**',
-    redirectTo: 'categories',
-  },
-  {
     path: 'departments',
     loadComponent: () =>
       import('./features/departments/pages/departments-page/departments-page.component').then(
@@ -43,6 +34,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/events/pages/events-page/events-page.component').then(
         (m) => m.EventsPageComponent,
+      ),
+  },
+  {
+    path: 'calendar',
+    loadComponent: () =>
+      import('./features/events/pages/calendar-page/calendar-page.component').then(
+        (m) => m.CalendarPageComponent,
       ),
   },
   // Próximas fases según el orden recomendado:

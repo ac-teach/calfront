@@ -31,12 +31,11 @@ interface NavItem {
 })
 export class App {
   protected readonly title = signal('calfront');
-}
-
-export class AppComponet {
   isSidenadOpen = signal(true);
+  isSidenavOpen = signal(true);
 
   navItems: NavItem[] = [
+    { label: 'Calendario', route: '/calendar', icon: 'calendar_month' },
     { label: 'Categorias', route: '/categories', icon: 'category' },
     { label: 'Departamentos', route: '/departments', icon: 'domain' },
     { label: 'Ubicaciones', route: '/locations', icon: 'place' },

@@ -9,14 +9,14 @@ import { Department, CreateDepartmentDto, UpdateDepartmentDto } from '../models/
 })
 export class DepartmentsService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = '${enviroment.apiUrl}/departments';
+  private readonly baseUrl = `${environment.apiUrl}/departments`;
 
   listarTodos(): Observable<Department[]> {
     return this.http.get<Department[]>(this.baseUrl);
   }
 
   buscarPorId(id: string): Observable<Department> {
-    return this.http.get<Department>('${this.baseUrl}/${id}');
+    return this.http.get<Department>(`${this.baseUrl}/${id}`);
   }
 
   crear(dto: CreateDepartmentDto): Observable<Department> {
@@ -24,7 +24,7 @@ export class DepartmentsService {
   }
 
   modificar(id: string, dto: UpdateDepartmentDto): Observable<Department> {
-    return this.http.patch<Department>('${this.baseUrl}/${id}', dto);
+    return this.http.patch<Department>(`${this.baseUrl}/${id}`, dto);
   }
 
   desactivar(id: string, isActive: boolean): Observable<Department> {

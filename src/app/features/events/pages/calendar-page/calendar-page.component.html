@@ -1,0 +1,153 @@
+<div class="page-header">
+    <h1>Calendario y Ocurrencias</h1>
+</div>
+
+@if (isLoading()) {
+<mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (errorMessage()) {
+<mat-card class="error-banner" appearance="outlined">
+    <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <span>{{ errorMessage() }}</span>
+    </mat-card-content>
+</mat-card>
+}
+
+@if (successMessage()) {
+<mat-card class="success-banner" appearance="outlined">
+    <mat-card-content>
+        <mat-icon color="primary">check_circle</mat-icon>
+        <span>{{ successMessage() }}</span>
+    </mat-card-content>
+</mat-card>
+}
+
+<div class="calendar-layout">
+    <!-- Vista Principal de FullCalendar -->
+    <mat-card appearance="outlined" class="calendar-card">
+        <mat-card-content>
+            <full-calendar [options]="calendarOptions" [events]="calendarEvents()"></full-calendar>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Panel Lateral de Detalle y Excepciones de Ocurrencia -->
+    <mat-card appearance="outlined" class="occurrence-panel">
+        <mat-card-header>
+            <mat-card-title>
+                {{ selectedOccurrence() ? 'Detalle de Ocurrencia' : 'Selecciona un evento' }}
+            </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+            @if (selectedOccurrence(); as sel) {
+            <div class="occurrence-info">
+                <h3>{{ sel.event.title }}</h3>
+                <p class="desc">{{ sel.event.description || 'Sin descripción' }}</p>
+
+                <div class="meta-list">
+                    <div>
+                        <strong>Inicio actual:</strong>
+                        {{ sel.displayStartIso | date: 'dd/MM/yyyy HH:mm' }}
+                    </div>
+                    <div>
+                        <strong>Fin actual:</strong>
+                        {{ sel.displayEndIso | date: 'dd/MM/yyyy HH:mm' }}
+                    </div>
+
+                    @if (sel.event.isRecurring) {
+                    <div class="original-tag">
+                        <strong>Fecha original en serie (originalDate):</strong>
+                        <code>{{ sel.originalDateIso | date: 'dd/MM/yyyy HH:mm' }}</code>
+                    </div>
+                    }
+                </div>
+
+                <mat-divider class="divider"></mat-divider>
+
+                @if (sel.event.isRecurring) {
+                <h4>Acciones sobre esta ocurrencia</h4>
+                <p class="hint">
+                    Estas acciones afectan únicamente a esta fecha sin modificar el resto de la serie recurrente.
+                </p>
+
+                <div class="occurrence-actions">
+                    <button mat-stroked-button color="primary" type="button"
+                        (click)="showRescheduleForm.set(!showRescheduleForm())">
+                        <mat-icon>edit_calendar</mat-icon>
+                        Reprogramar esta fecha
+                    </button>
+
+                    <button mat-stroked-button color="warn" type="button" (click)="cancelSingleOccurrence()"
+                        [disabled]="isLoading()">
+                        <mat-icon>event_busy</mat-icon>
+                        Cancelar solo esta fecha
+                    </button>
+                </div>
+
+                <!-- Formulario para Reprogramar Ocurrencia -->
+                @if (showRescheduleForm()) {
+                <form [formGroup]="rescheduleForm" (ngSubmit)="submitRescheduleOccurrence()" class="reschedule-form">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Nuevo Inicio</mat-label>
+                        <input matInput type="datetime-local" formControlName="newStartTime" />
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Nuevo Fin</mat-label>
+                        <input matInput type="datetime-local" formControlName="newEndTime" />
+                    </mat-form-field>
+
+                    <button mat-flat-button color="primary" type="submit" [disabled]="isLoading()">
+                        Confirmar nuevo horario
+                    </button>
+                </form>
+                }
+
+                <mat-divider class="divider"></mat-divider>
+
+                <!-- Historial de Excepciones de la Serie -->
+                <h4>Excepciones registradas en esta serie</h4>
+                @if (eventExceptions().length === 0) {
+                <p class="hint">No hay excepciones activas para este evento.</p>
+                } @else {
+                <ul class="exceptions-list">
+                    @for (ex of eventExceptions(); track ex.id) {
+                    <li>
+                        <div class="ex-details">
+                            <span>
+                                <strong>Original:</strong>
+                                {{ ex.originalDate | date: 'dd/MM/yyyy HH:mm' }}
+                            </span>
+                            <small>
+                                @if (ex.isCancelled) {
+                                Estado: Cancelada
+                                } @else {
+                                Movida a: {{ ex.newStartTime | date: 'dd/MM/yyyy HH:mm' }}
+                                }
+                            </small>
+                        </div>
+                        <button mat-icon-button color="primary" title="Eliminar excepción y restaurar horario original"
+                            (click)="restoreException(sel.event.id, ex.id)">
+                            <mat-icon>restore</mat-icon>
+                        </button>
+                    </li>
+                    }
+                </ul>
+                }
+                } @else {
+                <p class="hint">
+                    Este es un evento único (no recurrente). Puedes editarlo desde la sección Eventos.
+                </p>
+                }
+            </div>
+            } @else {
+            <p class="empty-hint">
+                Haz clic sobre cualquier evento en el calendario para ver sus detalles o administrar ocurrencias
+                individuales.
+            </p>
+            }
+        </mat-card-content>
+    </mat-card>
+</div>

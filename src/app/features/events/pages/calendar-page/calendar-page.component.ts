@@ -97,8 +97,8 @@ export class CalendarPageComponent implements OnInit {
     newEndTime: ['', [Validators.required]],
   });
 
-  calendarEvents = computed<EventImput[]>(() => {
-    const items: EventInput[] = [];
+  calendarEvents = computed<CalendarEventInput[]>(() => {
+    const items: CalendarEventInput[] = [];
 
     for (const ev of this.events()) {
       if (ev.status === 'CANCELLED') continue;
@@ -167,9 +167,9 @@ export class CalendarPageComponent implements OnInit {
     return items;
   });
 
-  calendarOptions: CalendarOptions = {
+  calendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, rrulePlugin],
-    locale: 'es', // Usa el string 'es' directamente (evita el error de resolución de sub-ruta)
+    locale: 'es',
     buttonText: {
       today: 'Hoy',
       month: 'Mes',
@@ -182,7 +182,7 @@ export class CalendarPageComponent implements OnInit {
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay',
     },
-    eventClick: (arg) => this.onEventClick(arg),
+    eventClick: (arg: CalendarEventClickArg) => this.onEventClick(arg),
     height: 'auto',
   };
 
@@ -216,7 +216,7 @@ export class CalendarPageComponent implements OnInit {
     return `DTSTART:${dtstart}\nRRULE:${rule}`;
   }
 
-  onEventClick(clickInfo: EventClickArg): void {
+  onEventClick(clickInfo: CalendarEventClickArg): void {
     this.errorMessage.set(null);
     this.successMessage.set(null);
     this.showRescheduleForm.set(false);
