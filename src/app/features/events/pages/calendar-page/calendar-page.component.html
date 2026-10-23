@@ -1,5 +1,5 @@
 <div class="page-header">
-    <h1>Calendario y Ocurrencias</h1>
+    <h1>Calendario</h1>
 </div>
 
 @if (isLoading()) {
@@ -24,7 +24,9 @@
 </mat-card>
 }
 
-<div class="calendar-layout">
+<!-- Clase dinámica que ajusta el CSS Grid cuando el panel lateral se abre -->
+<div class="calendar-layout" [class.panel-open]="selectedOccurrence() !== null">
+
     <!-- Vista Principal de FullCalendar -->
     <mat-card appearance="outlined" class="calendar-card">
         <mat-card-content>
@@ -32,33 +34,38 @@
         </mat-card-content>
     </mat-card>
 
-    <!-- Panel Lateral de Detalle y Excepciones de Ocurrencia -->
-    <mat-card appearance="outlined" class="occurrence-panel">
-        <mat-card-header>
-            <mat-card-title>
-                {{ selectedOccurrence() ? 'Detalle de Ocurrencia' : 'Selecciona un evento' }}
-            </mat-card-title>
+    <!-- Panel Lateral Emergente (Solo se renderiza si hay una ocurrencia seleccionada) -->
+    @if (selectedOccurrence(); as sel) {
+    <mat-card appearance="outlined" class="occurrence-panel slide-in">
+        <mat-card-header class="panel-header">
+            <mat-card-title>Detalle del Evento</mat-card-title>
+            <button mat-icon-button (click)="closePanel()" title="Cerrar panel">
+                <mat-icon>close</mat-icon>
+            </button>
         </mat-card-header>
 
         <mat-card-content>
-            @if (selectedOccurrence(); as sel) {
             <div class="occurrence-info">
                 <h3>{{ sel.event.title }}</h3>
                 <p class="desc">{{ sel.event.description || 'Sin descripción' }}</p>
 
                 <div class="meta-list">
                     <div>
-                        <strong>Inicio actual:</strong>
+                        <strong>Ubicación:</strong>
+                        <span>{{ getLocationName(sel.event) }}</span>
+                    </div>
+                    <div>
+                        <strong>Inicio:</strong>
                         {{ sel.displayStartIso | date: 'dd/MM/yyyy HH:mm' }}
                     </div>
                     <div>
-                        <strong>Fin actual:</strong>
+                        <strong>Fin:</strong>
                         {{ sel.displayEndIso | date: 'dd/MM/yyyy HH:mm' }}
                     </div>
 
                     @if (sel.event.isRecurring) {
                     <div class="original-tag">
-                        <strong>Fecha original en serie (originalDate):</strong>
+                        <strong>Fecha original en serie:</strong>
                         <code>{{ sel.originalDateIso | date: 'dd/MM/yyyy HH:mm' }}</code>
                     </div>
                     }
@@ -68,25 +75,22 @@
 
                 @if (sel.event.isRecurring) {
                 <h4>Acciones sobre esta ocurrencia</h4>
-                <p class="hint">
-                    Estas acciones afectan únicamente a esta fecha sin modificar el resto de la serie recurrente.
-                </p>
+                <p class="hint">Modifica solo esta fecha sin alterar el resto de la serie.</p>
 
                 <div class="occurrence-actions">
                     <button mat-stroked-button color="primary" type="button"
                         (click)="showRescheduleForm.set(!showRescheduleForm())">
                         <mat-icon>edit_calendar</mat-icon>
-                        Reprogramar esta fecha
+                        Reprogramar fecha
                     </button>
 
                     <button mat-stroked-button color="warn" type="button" (click)="cancelSingleOccurrence()"
                         [disabled]="isLoading()">
                         <mat-icon>event_busy</mat-icon>
-                        Cancelar solo esta fecha
+                        Cancelar fecha
                     </button>
                 </div>
 
-                <!-- Formulario para Reprogramar Ocurrencia -->
                 @if (showRescheduleForm()) {
                 <form [formGroup]="rescheduleForm" (ngSubmit)="submitRescheduleOccurrence()" class="reschedule-form">
                     <mat-form-field appearance="outline">
@@ -100,35 +104,31 @@
                     </mat-form-field>
 
                     <button mat-flat-button color="primary" type="submit" [disabled]="isLoading()">
-                        Confirmar nuevo horario
+                        Confirmar horario
                     </button>
                 </form>
                 }
 
                 <mat-divider class="divider"></mat-divider>
 
-                <!-- Historial de Excepciones de la Serie -->
-                <h4>Excepciones registradas en esta serie</h4>
+                <h4>Excepciones activas</h4>
                 @if (eventExceptions().length === 0) {
-                <p class="hint">No hay excepciones activas para este evento.</p>
+                <p class="hint">No hay excepciones en este evento.</p>
                 } @else {
                 <ul class="exceptions-list">
                     @for (ex of eventExceptions(); track ex.id) {
                     <li>
                         <div class="ex-details">
-                            <span>
-                                <strong>Original:</strong>
-                                {{ ex.originalDate | date: 'dd/MM/yyyy HH:mm' }}
-                            </span>
+                            <span><strong>Original:</strong> {{ ex.originalDate | date: 'dd/MM/yyyy HH:mm' }}</span>
                             <small>
                                 @if (ex.isCancelled) {
-                                Estado: Cancelada
+                                Cancelada
                                 } @else {
-                                Movida a: {{ ex.newStartTime | date: 'dd/MM/yyyy HH:mm' }}
+                                Movida a: {{ ex.newStartTime | date: 'HH:mm' }}
                                 }
                             </small>
                         </div>
-                        <button mat-icon-button color="primary" title="Eliminar excepción y restaurar horario original"
+                        <button mat-icon-button color="primary" title="Restaurar horario original"
                             (click)="restoreException(sel.event.id, ex.id)">
                             <mat-icon>restore</mat-icon>
                         </button>
@@ -137,17 +137,10 @@
                 </ul>
                 }
                 } @else {
-                <p class="hint">
-                    Este es un evento único (no recurrente). Puedes editarlo desde la sección Eventos.
-                </p>
+                <p class="hint">Este es un evento único. Edítalo desde la sección Eventos.</p>
                 }
             </div>
-            } @else {
-            <p class="empty-hint">
-                Haz clic sobre cualquier evento en el calendario para ver sus detalles o administrar ocurrencias
-                individuales.
-            </p>
-            }
         </mat-card-content>
     </mat-card>
+    }
 </div>

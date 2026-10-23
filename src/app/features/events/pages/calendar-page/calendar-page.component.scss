@@ -12,41 +12,62 @@
     margin-bottom: 16px;
     border-color: #ef4444;
     background-color: #fef2f2;
-
-    mat-card-content {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #b91c1c;
-    }
 }
 
 .success-banner {
     margin-bottom: 16px;
     border-color: #10b981;
     background-color: #ecfdf5;
+}
 
-    mat-card-content {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #047857;
+/* Transición fluida del layout */
+.calendar-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    /* Inicia ocupando todo el ancho (oculto) */
+    gap: 24px;
+    align-items: start;
+    transition: grid-template-columns 0.3s ease;
+
+    &.panel-open {
+        grid-template-columns: 1fr 380px;
+        /* Expande el panel derecho */
+    }
+
+    @media (max-width: 1100px) {
+        &.panel-open {
+            grid-template-columns: 1fr;
+        }
     }
 }
 
-.calendar-layout {
-    display: grid;
-    grid-template-columns: 1fr 380px;
-    gap: 24px;
-    align-items: start;
+/* Animación de entrada para la tarjeta lateral */
+.slide-in {
+    animation: slideInRight 0.3s ease forwards;
+}
 
-    @media (max-width: 1100px) {
-        grid-template-columns: 1fr;
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
     }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .occurrence-info {
-    margin-top: 12px;
+    margin-top: 8px;
 
     h3 {
         margin: 0 0 4px;
@@ -62,7 +83,7 @@
 .meta-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     font-size: 0.9rem;
 
     .original-tag {
@@ -129,10 +150,4 @@
             }
         }
     }
-}
-
-.empty-hint {
-    color: #64748b;
-    text-align: center;
-    padding: 24px 8px;
 }

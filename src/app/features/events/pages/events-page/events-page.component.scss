@@ -130,3 +130,36 @@
     padding: 24px;
     color: #64748b;
 }
+/* ... mantén tus estilos actuales y añade esto al final ... */
+
+.recurrence-box {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin-top: 8px;
+}
+
+.days-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+
+    label {
+        font-size: 0.9rem;
+        color: #475569;
+        font-weight: 500;
+    }
+
+    mat-button-toggle-group {
+        flex-wrap: wrap;
+
+        mat-button-toggle {
+            width: 40px;
+        }
+    }
+}

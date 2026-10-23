@@ -1,88 +1,150 @@
-<section class="categories-container">
-    <header>
-        <h1>Gestión de Categorías</h1>
-    </header>
+<div class="page-header">
+    <h1>Gestión de Categorías</h1>
+</div>
 
-    @if (errorMessage()) {
-    <div class="alert-error" role="alert">
-        <strong>Error:</strong> {{ errorMessage() }}
-    </div>
-    }
+@if (isLoading()) {
+<mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
 
-    <div class="content-grid">
-        <!-- Formulario de Creación / Edición -->
-        <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="category-form">
-            <h2>{{ editingId() ? 'Editar Categoría' : 'Nueva Categoría' }}</h2>
+@if (errorMessage()) {
+<mat-card class="error-banner" appearance="outlined">
+    <mat-card-content>
+        <mat-icon color="warn">error_outline</mat-icon>
+        <span>{{ errorMessage() }}</span>
+    </mat-card-content>
+</mat-card>
+}
 
-            <div class="form-field">
-                <label for="name">Nombre *</label>
-                <input id="name" type="text" formControlName="name" (input)="generateSlug()" />
-            </div>
+<div class="categories-grid">
+    <!-- Formulario de Creación / Edición -->
+    <mat-card appearance="outlined">
+        <mat-card-header>
+            <mat-card-title>
+                {{ editingId() ? 'Editar Categoría' : 'Nueva Categoría' }}
+            </mat-card-title>
+        </mat-card-header>
 
-            <div class="form-field">
-                <label for="slug">Slug *</label>
-                <input id="slug" type="text" formControlName="slug" />
-            </div>
-
-            <div class="form-field">
-                <label for="color">Color *</label>
-                <input id="color" type="color" formControlName="color" />
-            </div>
-
-            <div class="form-field">
-                <label for="icon">Icono (opcional)</label>
-                <input id="icon" type="text" formControlName="icon" placeholder="ej. calendar_today" />
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" [disabled]="isLoading()">
-                    {{ editingId() ? 'Actualizar' : 'Crear' }}
-                </button>
-                @if (editingId()) {
-                <button type="button" (click)="resetForm()">Cancelar</button>
-                }
-            </div>
-        </form>
-
-        <!-- Listado de Categorías -->
-        <div class="categories-list">
-            @if (isLoading()) {
-            <p>Cargando categorías...</p>
-            } @else {
-            <table>
-                <thead>
-                    <tr>
-                        <th>Color</th>
-                        <th>Nombre</th>
-                        <th>Slug</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (cat of categories(); track cat.id) {
-                    <tr [class.inactive]="!cat.isActive">
-                        <td>
-                            <span class="color-dot" [style.background-color]="cat.color"></span>
-                        </td>
-                        <td>{{ cat.name }}</td>
-                        <td><code>{{ cat.slug }}</code></td>
-                        <td>{{ cat.isActive ? 'Activa' : 'Inactiva' }}</td>
-                        <td>
-                            <button type="button" (click)="startEdit(cat)">Editar</button>
-                            <button type="button" (click)="toggleStatus(cat)">
-                                {{ cat.isActive ? 'Desactivar' : 'Reactivar' }}
-                            </button>
-                        </td>
-                    </tr>
-                    } @empty {
-                    <tr>
-                        <td colspan="5">No hay categorías registradas.</td>
-                    </tr>
+        <mat-card-content>
+            <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="cat-form">
+                <mat-form-field appearance="outline">
+                    <mat-label>Nombre de la Categoría</mat-label>
+                    <input matInput formControlName="name" (input)="generateSlug()"
+                        placeholder="Ej. Conferencias, Talleres" />
+                    @if (categoryForm.controls.name.invalid && categoryForm.controls.name.touched) {
+                    <mat-error>El nombre es obligatorio (mín. 2 caracteres)</mat-error>
                     }
-                </tbody>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Slug</mat-label>
+                    <input matInput formControlName="slug" placeholder="ej. conferencias-institucionales" />
+                    @if (categoryForm.controls.slug.invalid && categoryForm.controls.slug.touched) {
+                    <mat-error>Usa solo minúsculas, números y guiones</mat-error>
+                    }
+                </mat-form-field>
+
+                <div class="color-picker-field">
+                    <label for="catColor">Color distintivo</label>
+                    <div class="color-input-wrapper">
+                        <input id="catColor" type="color" formControlName="color" />
+                        <code>{{ categoryForm.controls.color.value }}</code>
+                    </div>
+                </div>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Icono Material (Opcional)</mat-label>
+                    <input matInput formControlName="icon" placeholder="ej. campaign, school, event" />
+                    @if (categoryForm.controls.icon.value) {
+                    <mat-icon matSuffix>{{ categoryForm.controls.icon.value }}</mat-icon>
+                    }
+                </mat-form-field>
+
+                <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="isLoading()">
+                        <mat-icon>{{ editingId() ? 'save' : 'add_circle' }}</mat-icon>
+                        {{ editingId() ? 'Guardar Cambios' : 'Crear Categoría' }}
+                    </button>
+
+                    @if (editingId()) {
+                    <button mat-stroked-button type="button" (click)="resetForm()">
+                        Cancelar
+                    </button>
+                    }
+                </div>
+            </form>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Tabla de Categorías Registradas -->
+    <mat-card appearance="outlined">
+        <mat-card-header>
+            <mat-card-title>Categorías Registradas</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+            <table mat-table [dataSource]="categories()" class="mat-elevation-z0 full-width-table">
+                <!-- Columna Color & Icono -->
+                <ng-container matColumnDef="color">
+                    <th mat-header-cell *matHeaderCellDef>Color / Icono</th>
+                    <td mat-cell *matCellDef="let cat">
+                        <div class="icon-color-cell">
+                            <span class="color-badge" [style.background-color]="cat.color"></span>
+                            @if (cat.icon) {
+                            <mat-icon class="category-icon">{{ cat.icon }}</mat-icon>
+                            }
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Columna Nombre -->
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                    <td mat-cell *matCellDef="let cat">
+                        <strong>{{ cat.name }}</strong>
+                    </td>
+                </ng-container>
+
+                <!-- Columna Slug -->
+                <ng-container matColumnDef="slug">
+                    <th mat-header-cell *matHeaderCellDef>Slug</th>
+                    <td mat-cell *matCellDef="let cat">
+                        <code>{{ cat.slug }}</code>
+                    </td>
+                </ng-container>
+
+                <!-- Columna Estado -->
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Estado</th>
+                    <td mat-cell *matCellDef="let cat">
+                        <mat-chip [highlighted]="cat.isActive">
+                            {{ cat.isActive ? 'Activa' : 'Inactiva' }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <!-- Columna Acciones -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                    <td mat-cell *matCellDef="let cat">
+                        <button mat-icon-button color="primary" (click)="startEdit(cat)" title="Editar">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button [color]="cat.isActive ? 'warn' : 'primary'" (click)="toggleStatus(cat)"
+                            [title]="cat.isActive ? 'Desactivar' : 'Activar'">
+                            <mat-icon>{{ cat.isActive ? 'visibility_off' : 'visibility' }}</mat-icon>
+                        </button>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.row-inactive]="!row.isActive"></tr>
+
+                <tr class="mat-row" *matNoDataRow>
+                    <td class="mat-cell empty-cell" colspan="5">
+                        No hay categorías registradas.
+                    </td>
+                </tr>
             </table>
-            }
-        </div>
-    </div>
-</section>
+        </mat-card-content>
+    </mat-card>
+</div>

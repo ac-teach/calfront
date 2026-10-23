@@ -109,27 +109,38 @@
                 </mat-form-field>
 
                 <!-- Configuración de Recurrencia -->
-                <mat-slide-toggle formControlName="isRecurring" color="primary" (change)="onRecurringChange()">
-                    Evento Recurrente (RRULE)
-                </mat-slide-toggle>
-
-                @if (eventForm.controls.isRecurring.value) {
-                <div class="recurrence-box">
-                    <mat-form-field appearance="outline">
-                        <mat-label>Regla RRULE</mat-label>
-                        <mat-select formControlName="rrule">
-                            <mat-option value="FREQ=DAILY;INTERVAL=1">Diario (FREQ=DAILY)</mat-option>
-                            <mat-option value="FREQ=WEEKLY;INTERVAL=1">Semanal (FREQ=WEEKLY)</mat-option>
-                            <mat-option value="FREQ=MONTHLY;INTERVAL=1">Mensual (FREQ=MONTHLY)</mat-option>
-                        </mat-select>
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline">
-                        <mat-label>Fin de Recurrencia (Opcional)</mat-label>
-                        <input matInput type="datetime-local" formControlName="recurrenceEnd" />
-                    </mat-form-field>
+            <mat-slide-toggle formControlName="isRecurring" color="primary" (change)="onRecurringChange()">
+                Evento Recurrente
+            </mat-slide-toggle>
+            
+            @if (eventForm.controls.isRecurring.value) {
+            <div class="recurrence-box">
+                <mat-form-field appearance="outline">
+                    <mat-label>Frecuencia</mat-label>
+                    <mat-select formControlName="recurrenceType">
+                        <mat-option value="DAILY">Diario (Todos los días)</mat-option>
+                        <mat-option value="WEEKLY">Semanal (Días específicos)</mat-option>
+                        <mat-option value="MONTHLY">Mensual</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            
+                @if (eventForm.controls.recurrenceType.value === 'WEEKLY') {
+                <div class="days-selector">
+                    <label>Selecciona los días:</label>
+                    <mat-button-toggle-group formControlName="byDay" multiple aria-label="Días de la semana">
+                        @for (day of weekDays; track day.value) {
+                        <mat-button-toggle [value]="day.value">{{ day.label }}</mat-button-toggle>
+                        }
+                    </mat-button-toggle-group>
                 </div>
                 }
+            
+                <mat-form-field appearance="outline">
+                    <mat-label>Fecha límite de recurrencia (Opcional)</mat-label>
+                    <input matInput type="datetime-local" formControlName="recurrenceEnd" />
+                </mat-form-field>
+            </div>
+            }
 
                 <div class="form-actions">
                     <button mat-flat-button color="primary" type="submit" [disabled]="isLoading()">

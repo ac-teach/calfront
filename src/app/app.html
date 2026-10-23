@@ -1,17 +1,31 @@
-@if (authService.isAuthenticated()) {
 <div class="app-container">
   <mat-toolbar color="primary" class="app-toolbar">
+    <!-- El botón de menú lateral solo se muestra si está autenticado -->
+    @if (authService.isAuthenticated()) {
     <button mat-icon-button (click)="toggleSidenav()" aria-label="Alternar menú">
       <mat-icon>menu</mat-icon>
     </button>
+    }
+
     <span class="app-title">Agenda Institucional</span>
     <span class="spacer"></span>
+
+    <!-- Acceso condicional en la esquina superior derecha -->
+    @if (authService.isAuthenticated()) {
     <span class="user-greeting">{{ authService.currentUser()?.fullName }}</span>
     <button mat-icon-button (click)="logout()" title="Cerrar sesión">
       <mat-icon>logout</mat-icon>
     </button>
+    } @else {
+    <button mat-button routerLink="/login" class="admin-login-btn">
+      <mat-icon>admin_panel_settings</mat-icon>
+      <span>Administración</span>
+    </button>
+    }
   </mat-toolbar>
 
+  <!-- Si está autenticado, muestra el panel con sidenav; si no, muestra el contenido público a pantalla completa -->
+  @if (authService.isAuthenticated()) {
   <mat-sidenav-container class="sidenav-container">
     <mat-sidenav [opened]="isSidenavOpen()" mode="side" class="app-sidenav">
       <mat-nav-list>
@@ -31,9 +45,9 @@
       <router-outlet />
     </mat-sidenav-content>
   </mat-sidenav-container>
+  } @else {
+  <main class="public-main-content">
+    <router-outlet />
+  </main>
+  }
 </div>
-} @else {
-<main class="auth-wrapper">
-  <router-outlet />
-</main>
-}

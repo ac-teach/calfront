@@ -8,7 +8,8 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -19,6 +20,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatButtonToggleModule } from '@angular/material/button-toggle'; // <-- NUEVO IMPORT
 
 import { EventsService } from '../../services/events.service';
 import { CategoriesService } from '../../../categories/services/categories.service';
@@ -58,6 +60,7 @@ const dateRangeValidator: ValidatorFn = (group: AbstractControl): ValidationErro
     MatChipsModule,
     MatSlideToggleModule,
     MatProgressBarModule,
+    MatButtonToggleModule, // <-- REGISTRADO AQUÍ
   ],
   templateUrl: './events-page.component.html',
   styleUrl: './events-page.component.scss',
@@ -76,7 +79,6 @@ export class EventsPageComponent implements OnInit {
   locations = signal<LocationItem[]>([]);
   users = signal<User[]>([]);
 
-  // Solo mostramos registros activos en los selectores de creación
   activeCategories = computed(() => this.categories().filter((c) => c.isActive));
   activeDepartments = computed(() => this.departments().filter((d) => d.isActive));
   activeLocations = computed(() => this.locations().filter((l) => l.isActive));
@@ -104,6 +106,17 @@ export class EventsPageComponent implements OnInit {
     status: ['' as EventStatus | ''],
   });
 
+  // Días de la semana para el mapeo de botones
+  weekDays = [
+    { value: 'MO', label: 'L' },
+    { value: 'TU', label: 'M' },
+    { value: 'WE', label: 'X' },
+    { value: 'TH', label: 'J' },
+    { value: 'FR', label: 'V' },
+    { value: 'SA', label: 'S' },
+    { value: 'SU', label: 'D' },
+  ];
+
   eventForm = this.fb.group(
     {
       title: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(3)]),
@@ -118,7 +131,9 @@ export class EventsPageComponent implements OnInit {
       meetingUrl: this.fb.nonNullable.control(''),
       status: this.fb.nonNullable.control<EventStatus>('SCHEDULED'),
       isRecurring: this.fb.nonNullable.control(false),
-      rrule: this.fb.nonNullable.control(''),
+      // Controles personalizados para generar RRULE
+      recurrenceType: this.fb.nonNullable.control('WEEKLY'),
+      byDay: this.fb.nonNullable.control<string[]>([]),
       recurrenceEnd: this.fb.nonNullable.control(''),
     },
     { validators: [dateRangeValidator] },
@@ -131,19 +146,16 @@ export class EventsPageComponent implements OnInit {
 
   loadCatalogs(): void {
     forkJoin({
-      categories: this.categoriesService.listarTodos(),
-      departments: this.departmentsService.listarTodos(),
-      locations: this.locationsService.listarTodos(),
-      users: this.usersService.listarTodos(),
+      categories: this.categoriesService.listarTodos().pipe(catchError(() => of([]))),
+      departments: this.departmentsService.listarTodos().pipe(catchError(() => of([]))),
+      locations: this.locationsService.listarTodos().pipe(catchError(() => of([]))),
+      users: this.usersService.listarTodos().pipe(catchError(() => of([]))),
     }).subscribe({
       next: (res) => {
         this.categories.set(res.categories);
         this.departments.set(res.departments);
         this.locations.set(res.locations);
         this.users.set(res.users);
-      },
-      error: (err: ApiError) => {
-        this.errorMessage.set(`Error cargando catálogos: ${err.message}`);
       },
     });
   }
@@ -168,38 +180,51 @@ export class EventsPageComponent implements OnInit {
   applyFilters(): void {
     this.loadEvents();
   }
-
   clearFilters(): void {
-    this.filterForm.reset({
-      departmentId: '',
-      categoryId: '',
-      locationId: '',
-      status: '',
-    });
+    this.filterForm.reset({ departmentId: '', categoryId: '', locationId: '', status: '' });
     this.loadEvents();
   }
 
   onRecurringChange(): void {
-    const isRec = this.eventForm.controls.isRecurring.value;
-    if (isRec) {
-      this.eventForm.controls.rrule.setValidators([Validators.required]);
-      if (!this.eventForm.controls.rrule.value) {
-        this.eventForm.controls.rrule.setValue('FREQ=WEEKLY;INTERVAL=1');
-      }
-    } else {
-      this.eventForm.controls.rrule.clearValidators();
-      this.eventForm.controls.rrule.setValue('');
+    if (!this.eventForm.controls.isRecurring.value) {
       this.eventForm.controls.recurrenceEnd.setValue('');
+      this.eventForm.controls.byDay.setValue([]);
     }
-    this.eventForm.controls.rrule.updateValueAndValidity();
   }
 
-  // Convierte ISO UTC del backend a formato YYYY-MM-DDTHH:mm local para el input datetime-local
   private toLocalInputDateTime(isoString?: string | null): string {
     if (!isoString) return '';
     const date = new Date(isoString);
     const offsetMs = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+  }
+
+  // Desencripta la cadena RRULE de la base de datos para pintar los controles
+  private parseRRuleToForm(rrule: string | null | undefined): { type: string; days: string[] } {
+    if (!rrule) return { type: 'WEEKLY', days: [] };
+
+    let type = 'WEEKLY';
+    let days: string[] = [];
+
+    if (rrule.includes('FREQ=DAILY')) type = 'DAILY';
+    else if (rrule.includes('FREQ=MONTHLY')) type = 'MONTHLY';
+    else {
+      type = 'WEEKLY';
+      const byDayMatch = rrule.match(/BYDAY=([^;]+)/);
+      if (byDayMatch) {
+        days = byDayMatch[1].split(',');
+      }
+    }
+    return { type, days };
+  }
+
+  // Genera la cadena RRULE exacta para FullCalendar y la Base de datos
+  private buildRRuleString(type: string, days: string[]): string {
+    let rule = `FREQ=${type};INTERVAL=1`;
+    if (type === 'WEEKLY' && days.length > 0) {
+      rule += `;BYDAY=${days.join(',')}`;
+    }
+    return rule;
   }
 
   onSubmit(): void {
@@ -212,8 +237,10 @@ export class EventsPageComponent implements OnInit {
     this.errorMessage.set(null);
 
     const raw = this.eventForm.getRawValue();
+    const generatedRRule = raw.isRecurring
+      ? this.buildRRuleString(raw.recurrenceType, raw.byDay)
+      : undefined;
 
-    // Construcción limpia de DTO con fechas en ISO 8601 UTC
     const payload: CreateEventDto = {
       title: raw.title.trim(),
       startTime: new Date(raw.startTime).toISOString(),
@@ -227,13 +254,15 @@ export class EventsPageComponent implements OnInit {
       ...(raw.description.trim() ? { description: raw.description.trim() } : {}),
       ...(raw.locationId ? { locationId: raw.locationId } : {}),
       ...(raw.meetingUrl.trim() ? { meetingUrl: raw.meetingUrl.trim() } : {}),
-      ...(raw.isRecurring && raw.rrule.trim() ? { rrule: raw.rrule.trim() } : {}),
+      ...(generatedRRule ? { rrule: generatedRRule } : {}),
       ...(raw.isRecurring && raw.recurrenceEnd
         ? { recurrenceEnd: new Date(raw.recurrenceEnd).toISOString() }
         : {}),
     };
 
     const currentId = this.editingId();
+    //imprimir payload en cosola para descartar front
+    console.log(payload);
     const request$ = currentId
       ? this.eventsService.modificar(currentId, payload)
       : this.eventsService.crear(payload);
@@ -252,6 +281,8 @@ export class EventsPageComponent implements OnInit {
 
   startEdit(ev: EventItem): void {
     this.editingId.set(ev.id);
+    const parsedRule = this.parseRRuleToForm(ev.rrule);
+
     this.eventForm.patchValue({
       title: ev.title,
       description: ev.description ?? '',
@@ -265,10 +296,10 @@ export class EventsPageComponent implements OnInit {
       meetingUrl: ev.meetingUrl ?? '',
       status: ev.status,
       isRecurring: ev.isRecurring,
-      rrule: ev.rrule ?? '',
+      recurrenceType: parsedRule.type,
+      byDay: parsedRule.days,
       recurrenceEnd: this.toLocalInputDateTime(ev.recurrenceEnd),
     });
-    this.onRecurringChange();
   }
 
   cancelEventStatus(ev: EventItem): void {
@@ -322,9 +353,9 @@ export class EventsPageComponent implements OnInit {
       meetingUrl: '',
       status: 'SCHEDULED',
       isRecurring: false,
-      rrule: '',
+      recurrenceType: 'WEEKLY',
+      byDay: [],
       recurrenceEnd: '',
     });
-    this.onRecurringChange();
   }
 }

@@ -42,3 +42,27 @@
     justify-content: center;
     align-items: center;
 }
+
+.spacer {
+    flex: 1 1 auto;
+}
+
+.user-greeting {
+    font-size: 0.9rem;
+    margin-right: 12px;
+}
+
+.admin-login-btn {
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.public-main-content {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: calc(100vh - 64px);
+    background-color: #f8fafc;
+}

@@ -2,12 +2,10 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FullCalendarModule } from '@fullcalendar/angular';
-//import type { CalendarOptions, EventClickArg, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import rrulePlugin from '@fullcalendar/rrule';
-// import esLocale from '@fullcalendar/core/locales/es';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,19 +15,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDividerModule } from '@angular/material/divider';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { EventsService } from '../../services/events.service';
+import { LocationsService } from '../../../locations/services/locations.service';
 import { EventItem, EventException } from '../../models/event.model';
+import { LocationItem } from '../../../locations/models/location.model';
 import { ApiError } from '../../../../shared/interfaces/api-types.interface';
-
-interface SelectedOccurrence {
-  event: EventItem;
-  originalDateIso: string; // Regla semántica: siempre identifica la ocurrencia original
-  displayStartIso: string;
-  displayEndIso: string;
-  exceptionId?: string;
-  isRescheduled: boolean;
-}
 
 interface CalendarEventClickArg {
   event: {
@@ -60,6 +53,15 @@ interface CalendarEventInput {
   };
 }
 
+interface SelectedOccurrence {
+  event: EventItem;
+  originalDateIso: string;
+  displayStartIso: string;
+  displayEndIso: string;
+  exceptionId?: string;
+  isRescheduled: boolean;
+}
+
 @Component({
   selector: 'app-calendar-page',
   standalone: true,
@@ -81,9 +83,11 @@ interface CalendarEventInput {
 })
 export class CalendarPageComponent implements OnInit {
   private readonly eventsService = inject(EventsService);
+  private readonly locationsService = inject(LocationsService);
   private readonly fb = inject(FormBuilder);
 
   events = signal<EventItem[]>([]);
+  locations = signal<LocationItem[]>([]);
   selectedOccurrence = signal<SelectedOccurrence | null>(null);
   eventExceptions = signal<EventException[]>([]);
 
@@ -108,7 +112,6 @@ export class CalendarPageComponent implements OnInit {
 
       if (ev.isRecurring && ev.rrule) {
         const exceptions = ev.exceptions ?? [];
-        // Las fechas con excepción (canceladas o reprogramadas) se excluyen de la serie base
         const exdates = exceptions.map((ex) => ex.originalDate);
 
         items.push({
@@ -120,13 +123,9 @@ export class CalendarPageComponent implements OnInit {
           duration: { milliseconds: Math.max(durationMs, 1800000) },
           rrule: this.buildFullCalendarRRule(ev),
           exdate: exdates,
-          extendedProps: {
-            rawEvent: ev,
-            isRescheduledInstance: false,
-          },
+          extendedProps: { rawEvent: ev, isRescheduledInstance: false },
         });
 
-        // Agregamos como eventos individuales las ocurrencias reprogramadas (no canceladas)
         for (const ex of exceptions) {
           if (!ex.isCancelled && ex.newStartTime && ex.newEndTime) {
             items.push({
@@ -147,7 +146,6 @@ export class CalendarPageComponent implements OnInit {
           }
         }
       } else {
-        // Evento único
         items.push({
           id: ev.id,
           title: ev.title,
@@ -156,10 +154,7 @@ export class CalendarPageComponent implements OnInit {
           allDay: ev.isAllDay,
           backgroundColor: color,
           borderColor: color,
-          extendedProps: {
-            rawEvent: ev,
-            isRescheduledInstance: false,
-          },
+          extendedProps: { rawEvent: ev, isRescheduledInstance: false },
         });
       }
     }
@@ -182,21 +177,49 @@ export class CalendarPageComponent implements OnInit {
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay',
     },
+
+    // Nuevas configuraciones solicitadas:
+    displayEventTime: true, // Oculta la hora en la pastilla del evento
+    slotMinTime: '06:00:00', // Límite de inicio
+    slotMaxTime: '19:00:00', // Límite de fin
+    //eventContent: (arg: { event: { title: string }; timeText: string }) => {
+    // arg.event.title es el nombre del evento
+    // arg.timeText es la hora formateada por FullCalendar
+    // return {
+    // html: `
+    // <div style="display: flex; flex-direction: column; overflow: hidden; padding: 1px 3px;">
+    // <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+    //  ${arg.event.title}
+    // </div>
+    // ${
+    //  arg.timeText
+    //   ? `<div style="font-size: 0.8em; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${arg.timeText}</div>`
+    //  : ''
+    //  }
+    //  </div>
+    //  `,
+    //};
+    //},
+
     eventClick: (arg: CalendarEventClickArg) => this.onEventClick(arg),
     height: 'auto',
   };
 
   ngOnInit(): void {
-    this.loadCalendarData();
+    this.loadInitialData();
   }
 
-  loadCalendarData(): void {
+  loadInitialData(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    this.eventsService.listarTodos({ status: 'SCHEDULED' }).subscribe({
-      next: (data) => {
-        this.events.set(data);
+    forkJoin({
+      events: this.eventsService.listarTodos({ status: 'SCHEDULED' }),
+      locations: this.locationsService.listarTodos().pipe(catchError(() => of([]))),
+    }).subscribe({
+      next: (res) => {
+        this.events.set(res.events);
+        this.locations.set(res.locations);
         this.isLoading.set(false);
       },
       error: (err: ApiError) => {
@@ -227,8 +250,6 @@ export class CalendarPageComponent implements OnInit {
 
     const startIso = clickInfo.event.start?.toISOString() ?? rawEvent.startTime;
     const endIso = clickInfo.event.end?.toISOString() ?? rawEvent.endTime;
-
-    // Respetamos la regla semántica: originalDate identifica siempre la ocurrencia original
     const originalDateIso = isRescheduled ? props['originalDateIso'] : startIso;
 
     this.selectedOccurrence.set({
@@ -252,6 +273,19 @@ export class CalendarPageComponent implements OnInit {
     }
   }
 
+  closePanel(): void {
+    this.selectedOccurrence.set(null);
+  }
+
+  getLocationName(ev: EventItem): string {
+    if (!ev.locationId) return 'Sin ubicación asignada';
+    return (
+      ev.location?.name ||
+      this.locations().find((l) => l.id === ev.locationId)?.name ||
+      'Sin ubicación'
+    );
+  }
+
   loadExceptionsForEvent(eventId: string): void {
     this.eventsService.getExceptions(eventId).subscribe({
       next: (list) => this.eventExceptions.set(list),
@@ -259,7 +293,6 @@ export class CalendarPageComponent implements OnInit {
     });
   }
 
-  // POST /api/events/:eventId/exceptions/cancel
   cancelSingleOccurrence(): void {
     const sel = this.selectedOccurrence();
     if (!sel) return;
@@ -268,14 +301,12 @@ export class CalendarPageComponent implements OnInit {
     this.errorMessage.set(null);
 
     this.eventsService
-      .cancelOccurrence(sel.event.id, {
-        originalDate: sel.originalDateIso,
-      })
+      .cancelOccurrence(sel.event.id, { originalDate: sel.originalDateIso })
       .subscribe({
         next: () => {
           this.successMessage.set('Ocurrencia cancelada correctamente.');
           this.selectedOccurrence.set(null);
-          this.loadCalendarData();
+          this.loadInitialData();
         },
         error: (err: ApiError) => {
           this.errorMessage.set(err.message);
@@ -284,7 +315,6 @@ export class CalendarPageComponent implements OnInit {
       });
   }
 
-  // POST /api/events/:eventId/exceptions/reschedule
   submitRescheduleOccurrence(): void {
     const sel = this.selectedOccurrence();
     if (!sel || this.rescheduleForm.invalid) return;
@@ -294,13 +324,11 @@ export class CalendarPageComponent implements OnInit {
     const newEnd = new Date(raw.newEndTime);
 
     if (newStart >= newEnd) {
-      this.errorMessage.set('La nueva hora de inicio debe ser anterior a la nueva hora de fin.');
+      this.errorMessage.set('La hora de inicio debe ser anterior a la de fin.');
       return;
     }
 
     this.isLoading.set(true);
-    this.errorMessage.set(null);
-
     this.eventsService
       .rescheduleOccurrence(sel.event.id, {
         originalDate: sel.originalDateIso,
@@ -312,7 +340,7 @@ export class CalendarPageComponent implements OnInit {
           this.successMessage.set('Ocurrencia reprogramada correctamente.');
           this.showRescheduleForm.set(false);
           this.selectedOccurrence.set(null);
-          this.loadCalendarData();
+          this.loadInitialData();
         },
         error: (err: ApiError) => {
           this.errorMessage.set(err.message);
@@ -321,16 +349,13 @@ export class CalendarPageComponent implements OnInit {
       });
   }
 
-  // DELETE /api/events/:eventId/exceptions/:exceptionId
   restoreException(eventId: string, exceptionId: string): void {
     this.isLoading.set(true);
-    this.errorMessage.set(null);
-
     this.eventsService.deleteException(eventId, exceptionId).subscribe({
       next: () => {
         this.successMessage.set('Excepción eliminada. La ocurrencia volvió a su regla original.');
         this.loadExceptionsForEvent(eventId);
-        this.loadCalendarData();
+        this.loadInitialData();
       },
       error: (err: ApiError) => {
         this.errorMessage.set(err.message);
