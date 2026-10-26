@@ -55,3 +55,53 @@ body {
 .mat-mdc-text-field-wrapper {
   border-radius: var(--forma-radius) !important;
 }
+
+/* ========================================================
+   Corrección de paneles flotantes y overlays (MatSelect, Autocomplete, Menus)
+   ======================================================== */
+
+// Panel del mat-select
+.mat-mdc-select-panel {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border-radius: 6px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+  opacity: 1 !important;
+
+  // Opciones individuales dentro del combo
+  .mat-mdc-option {
+    background-color: #ffffff;
+    color: #1e293b;
+
+    &:hover:not(.mdc-list-item--disabled) {
+      background-color: #f1f5f9 !important;
+    }
+
+    &.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+      background-color: #e0f2fe !important; // Azul muy claro para la opción activa
+      color: #0284c7 !important;
+      font-weight: 500;
+    }
+  }
+}
+
+// Menús emergentes (mat-menu) y autocomplete
+.mat-mdc-menu-panel,
+.mat-mdc-autocomplete-panel {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border-radius: 6px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+}
+
+// Asegurar que el contenedor del overlay tenga el z-index y opacidad adecuada
+.cdk-overlay-pane {
+  background-color: transparent; // El panel interno se encarga del fondo sólido
+  z-index: 1000 !important;
+}
