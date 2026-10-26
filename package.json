@@ -26,6 +26,7 @@
     "@fullcalendar/core": "6.1.22",
     "@fullcalendar/daygrid": "6.1.22",
     "@fullcalendar/interaction": "6.1.22",
+    "@fullcalendar/multimonth": "6.1.22",
     "@fullcalendar/rrule": "6.1.22",
     "@fullcalendar/timegrid": "6.1.22",
     "express": "^5.1.0",

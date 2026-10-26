@@ -1,153 +1,273 @@
 .page-header {
-    margin-bottom: 16px;
+  margin-bottom: 16px;
 
-    h1 {
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 500;
-    }
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+  }
 }
 
 .error-banner {
-    margin-bottom: 16px;
-    border-color: #ef4444;
-    background-color: #fef2f2;
+  margin-bottom: 16px;
+  border-color: #ef4444;
+  background-color: #fef2f2;
 }
 
 .success-banner {
-    margin-bottom: 16px;
-    border-color: #10b981;
-    background-color: #ecfdf5;
+  margin-bottom: 16px;
+  border-color: #10b981;
+  background-color: #ecfdf5;
 }
 
 /* Transición fluida del layout */
 .calendar-layout {
-    display: grid;
-    grid-template-columns: 1fr;
-    /* Inicia ocupando todo el ancho (oculto) */
-    gap: 24px;
-    align-items: start;
-    transition: grid-template-columns 0.3s ease;
+  display: grid;
+  grid-template-columns: 1fr;
+  /* Inicia ocupando todo el ancho (oculto) */
+  gap: 24px;
+  align-items: start;
+  transition: grid-template-columns 0.3s ease;
 
+  &.panel-open {
+    grid-template-columns: 1fr 380px;
+    /* Expande el panel derecho */
+  }
+
+  @media (max-width: 1100px) {
     &.panel-open {
-        grid-template-columns: 1fr 380px;
-        /* Expande el panel derecho */
+      grid-template-columns: 1fr;
     }
-
-    @media (max-width: 1100px) {
-        &.panel-open {
-            grid-template-columns: 1fr;
-        }
-    }
+  }
 }
 
 /* Animación de entrada para la tarjeta lateral */
 .slide-in {
-    animation: slideInRight 0.3s ease forwards;
+  animation: slideInRight 0.3s ease forwards;
 }
 
 @keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0;
-    padding-bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .occurrence-info {
-    margin-top: 8px;
+  margin-top: 8px;
 
-    h3 {
-        margin: 0 0 4px;
-        font-size: 1.15rem;
-    }
+  h3 {
+    margin: 0 0 4px;
+    font-size: 1.15rem;
+  }
 
-    .desc {
-        color: #475569;
-        margin-bottom: 12px;
-    }
+  .desc {
+    color: #475569;
+    margin-bottom: 12px;
+  }
 }
 
 .meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+
+  .original-tag {
+    margin-top: 4px;
+    padding: 6px 8px;
+    background-color: #f1f5f9;
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    font-size: 0.9rem;
-
-    .original-tag {
-        margin-top: 4px;
-        padding: 6px 8px;
-        background-color: #f1f5f9;
-        border-radius: 6px;
-        display: flex;
-        flex-direction: column;
-    }
+  }
 }
 
 .divider {
-    margin: 16px 0;
+  margin: 16px 0;
 }
 
 .hint {
-    font-size: 0.85rem;
-    color: #64748b;
-    margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 12px;
 }
 
 .occurrence-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .reschedule-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 16px;
-    padding: 12px;
-    background-color: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .exceptions-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background-color: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
 
-    li {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 10px;
-        background-color: #f8fafc;
-        border-radius: 6px;
-        border: 1px solid #e2e8f0;
+    .ex-details {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.85rem;
 
-        .ex-details {
-            display: flex;
-            flex-direction: column;
-            font-size: 0.85rem;
-
-            small {
-                color: #64748b;
-            }
-        }
+      small {
+        color: #64748b;
+      }
     }
+  }
+}
+
+/* Personalización de la barra de tiempo actual */
+::ng-deep .fc .fc-timegrid-now-indicator-line {
+  border-color: #ef4444;
+  /* Rojo vibrante */
+  border-width: 2px;
+}
+
+::ng-deep .fc .fc-timegrid-now-indicator-arrow {
+  border-color: #ef4444;
+}
+
+::ng-deep .fc .fc-toolbar {
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .fc-toolbar-chunk {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+}
+
+/* Integración estética de FullCalendar con Angular Material (Forma) */
+.fc {
+  --fc-font-family: Roboto, 'Helvetica Neue', sans-serif;
+  --fc-border-color: #e2e8f0;
+  --fc-page-bg-color: #ffffff;
+  --fc-neutral-bg-color: #f8fafc;
+  --fc-neutral-text-color: #64748b;
+  --fc-today-bg-color: #f0fdf4; /* Fondo sutil para el día actual */
+
+  // Botones de la barra superior estilizados como Angular Material
+  .fc-button {
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    text-transform: capitalize !important;
+    box-shadow: none !important;
+    padding: 6px 12px !important;
+    font-size: 0.875rem !important;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .fc-button-primary {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
+
+    &:hover {
+      background-color: #f1f5f9 !important;
+      border-color: #94a3b8 !important;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+    }
+  }
+
+  // Botón activo (la vista seleccionada)
+  .fc-button-active {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    border-color: #0f172a !important;
+  }
+
+  // Encabezados de días
+  .fc-col-header-cell-cushion {
+    font-weight: 600;
+    color: #475569;
+    padding: 8px 4px !important;
+    text-decoration: none !important;
+  }
+
+  // Tarjetas de eventos redondeadas y limpias
+  .fc-event {
+    border-radius: 4px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+    border: none !important;
+    cursor: pointer;
+  }
+}
+
+/* Indicador visual para títulos de mes interactivos en la vista de año */
+::ng-deep .fc-multimonth-title {
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    text-decoration 0.15s ease;
+
+  &:hover {
+    color: #2563eb; /* Azul primario */
+    text-decoration: underline;
+  }
+}
+
+/* Indicador para los números de día interactivos */
+::ng-deep .fc-daygrid-day-number {
+  cursor: pointer;
+
+  &:hover {
+    color: #2563eb;
+    font-weight: 700;
+  }
+}
+
+.admin-quick-actions {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+
+  .edit-master-btn {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
 }

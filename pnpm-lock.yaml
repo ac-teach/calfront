@@ -208,6 +208,9 @@ importers:
       '@fullcalendar/interaction':
         specifier: 6.1.22
         version: 6.1.22(@fullcalendar/core@6.1.22)
+      '@fullcalendar/multimonth':
+        specifier: 6.1.22
+        version: 6.1.22(@fullcalendar/core@6.1.22)
       '@fullcalendar/rrule':
         specifier: 6.1.22
         version: 6.1.22(@fullcalendar/core@6.1.22)(rrule@2.8.1)
@@ -737,6 +740,11 @@ packages:
 
   '@fullcalendar/interaction@6.1.22':
     resolution: {integrity: sha512-r8Njw8aPNFGRwDjVAh9NTh3ZJib5tcUoLi/BM4uYJt5Cs9tDiirmImaqxhx56hclVFX7ktd5CdaMX0+ArSbm5A==}
+    peerDependencies:
+      '@fullcalendar/core': ~6.1.22
+
+  '@fullcalendar/multimonth@6.1.22':
+    resolution: {integrity: sha512-txEXhT3d6b9GFiiX9rhY4Z77KmT87WQfmTqzoi7ZyDn/q+ey5dlHPK2C9fY8dlB2cJWHdvDNYHFHsj1F3to6sQ==}
     peerDependencies:
       '@fullcalendar/core': ~6.1.22
 
@@ -3155,6 +3163,11 @@ snapshots:
   '@fullcalendar/interaction@6.1.22(@fullcalendar/core@6.1.22)':
     dependencies:
       '@fullcalendar/core': 6.1.22
+
+  '@fullcalendar/multimonth@6.1.22(@fullcalendar/core@6.1.22)':
+    dependencies:
+      '@fullcalendar/core': 6.1.22
+      '@fullcalendar/daygrid': 6.1.22(@fullcalendar/core@6.1.22)
 
   '@fullcalendar/rrule@6.1.22(@fullcalendar/core@6.1.22)(rrule@2.8.1)':
     dependencies:

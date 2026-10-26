@@ -39,7 +39,7 @@ export class AuthService {
     }
     this.token.set(null);
     this.currentUser.set(null);
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 
   private setSession(authResult: AuthResponse): void {

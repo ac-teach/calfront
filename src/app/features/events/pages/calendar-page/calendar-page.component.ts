@@ -1,11 +1,23 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  signal,
+  computed,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { FullCalendarModule } from '@fullcalendar/angular';
+import { Router } from '@angular/router'; // <-- Importa Router
+import { FullCalendarModule, FullCalendarComponent } from '@fullcalendar/angular';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import rrulePlugin from '@fullcalendar/rrule';
+import multiMonthPlugin from '@fullcalendar/multimonth';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,6 +35,7 @@ import { LocationsService } from '../../../locations/services/locations.service'
 import { EventItem, EventException } from '../../models/event.model';
 import { LocationItem } from '../../../locations/models/location.model';
 import { ApiError } from '../../../../shared/interfaces/api-types.interface';
+import { AuthService } from '../../../../core/services/auth.service';
 
 interface CalendarEventClickArg {
   event: {
@@ -82,9 +95,14 @@ interface SelectedOccurrence {
   styleUrl: './calendar-page.component.scss',
 })
 export class CalendarPageComponent implements OnInit {
+  @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
+
   private readonly eventsService = inject(EventsService);
   private readonly locationsService = inject(LocationsService);
   private readonly fb = inject(FormBuilder);
+
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
 
   events = signal<EventItem[]>([]);
   locations = signal<LocationItem[]>([]);
@@ -163,43 +181,52 @@ export class CalendarPageComponent implements OnInit {
   });
 
   calendarOptions = {
-    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, rrulePlugin],
+    themeSystem: 'standard',
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, rrulePlugin, multiMonthPlugin],
     locale: 'es',
     buttonText: {
       today: 'Hoy',
+      year: 'Año',
+      quarter: 'Trimestre',
       month: 'Mes',
       week: 'Semana',
       day: 'Día',
     },
-    initialView: 'dayGridMonth',
+    initialView: 'timeGridWeek',
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay',
+      right: 'multiMonthYear,quarterView,dayGridMonth,timeGridWeek,timeGridDay',
+    },
+    views: {
+      quarterView: {
+        type: 'dayGrid',
+        duration: { months: 3 },
+        buttonText: 'Trimestre',
+      },
+      multiMonthYear: {
+        type: 'multiMonth',
+        duration: { years: 1 },
+        buttonText: 'Año',
+      },
+    },
+
+    // 1. Activa enlaces interactivos en días/semanas
+    navLinks: true,
+
+    // 2. Al hacer clic en el número de cualquier día, abre la vista diaria
+    navLinkDayClick: (date: Date) => {
+      const api = this.calendarComponent.getApi();
+      api.gotoDate(date);
+      api.changeView('timeGridDay');
     },
 
     // Nuevas configuraciones solicitadas:
     displayEventTime: true, // Oculta la hora en la pastilla del evento
     slotMinTime: '06:00:00', // Límite de inicio
     slotMaxTime: '19:00:00', // Límite de fin
-    //eventContent: (arg: { event: { title: string }; timeText: string }) => {
-    // arg.event.title es el nombre del evento
-    // arg.timeText es la hora formateada por FullCalendar
-    // return {
-    // html: `
-    // <div style="display: flex; flex-direction: column; overflow: hidden; padding: 1px 3px;">
-    // <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-    //  ${arg.event.title}
-    // </div>
-    // ${
-    //  arg.timeText
-    //   ? `<div style="font-size: 0.8em; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${arg.timeText}</div>`
-    //  : ''
-    //  }
-    //  </div>
-    //  `,
-    //};
-    //},
+    nowIndicator: true,
+    scrollTime: new Date().toTimeString().substring(0, 8),
 
     eventClick: (arg: CalendarEventClickArg) => this.onEventClick(arg),
     height: 'auto',
@@ -207,6 +234,31 @@ export class CalendarPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadInitialData();
+  }
+
+  @HostListener('click', ['$event'])
+  onHostClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+
+    // Detecta si el clic fue en el título del mes en la vista de Año
+    const titleEl = target.closest('.fc-multimonth-title') as HTMLElement | null;
+
+    if (titleEl && this.calendarComponent) {
+      const monthEl = titleEl.closest('.fc-multimonth-month') as HTMLElement | null;
+      const dateAttr = monthEl?.getAttribute('data-date');
+
+      if (dateAttr) {
+        const api = this.calendarComponent.getApi();
+        api.gotoDate(dateAttr);
+        api.changeView('dayGridMonth');
+      }
+    }
+  }
+
+  goToEditEvent(eventId: string): void {
+    // Redirige a la gestión de eventos pasando el id por queryParams
+    this.router.navigate(['/events'], { queryParams: { editId: eventId } });
   }
 
   loadInitialData(): void {

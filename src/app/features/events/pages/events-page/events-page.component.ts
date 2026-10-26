@@ -22,6 +22,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatButtonToggleModule } from '@angular/material/button-toggle'; // <-- NUEVO IMPORT
 
+import { ActivatedRoute } from '@angular/router';
 import { EventsService } from '../../services/events.service';
 import { CategoriesService } from '../../../categories/services/categories.service';
 import { DepartmentsService } from '../../../departments/services/departments.service';
@@ -72,6 +73,7 @@ export class EventsPageComponent implements OnInit {
   private readonly locationsService = inject(LocationsService);
   private readonly usersService = inject(UsersService);
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
 
   events = signal<EventItem[]>([]);
   categories = signal<Category[]>([]);
@@ -169,6 +171,13 @@ export class EventsPageComponent implements OnInit {
       next: (data) => {
         this.events.set(data);
         this.isLoading.set(false);
+        const editId = this.route.snapshot.queryParamMap.get('editId');
+        if (editId) {
+          const targetEvent = data.find((e) => e.id === editId);
+          if (targetEvent) {
+            this.startEdit(targetEvent);
+          }
+        }
       },
       error: (err: ApiError) => {
         this.errorMessage.set(err.message);

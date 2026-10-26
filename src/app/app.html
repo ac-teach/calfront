@@ -1,53 +1,52 @@
-<div class="app-container">
-  <mat-toolbar color="primary" class="app-toolbar">
-    <!-- El botón de menú lateral solo se muestra si está autenticado -->
-    @if (authService.isAuthenticated()) {
-    <button mat-icon-button (click)="toggleSidenav()" aria-label="Alternar menú">
-      <mat-icon>menu</mat-icon>
-    </button>
-    }
-
-    <span class="app-title">Agenda Institucional</span>
-    <span class="spacer"></span>
-
-    <!-- Acceso condicional en la esquina superior derecha -->
-    @if (authService.isAuthenticated()) {
-    <span class="user-greeting">{{ authService.currentUser()?.fullName }}</span>
-    <button mat-icon-button (click)="logout()" title="Cerrar sesión">
-      <mat-icon>logout</mat-icon>
-    </button>
-    } @else {
-    <button mat-button routerLink="/login" class="admin-login-btn">
-      <mat-icon>admin_panel_settings</mat-icon>
-      <span>Administración</span>
-    </button>
-    }
-  </mat-toolbar>
-
-  <!-- Si está autenticado, muestra el panel con sidenav; si no, muestra el contenido público a pantalla completa -->
+<mat-toolbar color="primary" class="app-toolbar">
   @if (authService.isAuthenticated()) {
-  <mat-sidenav-container class="sidenav-container">
-    <mat-sidenav [opened]="isSidenavOpen()" mode="side" class="app-sidenav">
-      <mat-nav-list>
-        @for (item of navItems; track item.route) {
-        @if (!item.adminOnly || authService.isAdmin()) {
-        <a mat-list-item [routerLink]="item.route" routerLinkActive="active-link" #rla="routerLinkActive"
-          [activated]="rla.isActive">
-          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-          <span matListItemTitle>{{ item.label }}</span>
-        </a>
-        }
-        }
-      </mat-nav-list>
-    </mat-sidenav>
-
-    <mat-sidenav-content class="main-content">
-      <router-outlet />
-    </mat-sidenav-content>
-  </mat-sidenav-container>
-  } @else {
-  <main class="public-main-content">
-    <router-outlet />
-  </main>
+  <button mat-icon-button (click)="toggleSidenav()" aria-label="Alternar menú">
+    <mat-icon>menu</mat-icon>
+  </button>
   }
-</div>
+
+  <!-- Título con enlace hacia /calendar -->
+  <a routerLink="/calendar" class="app-title-link">
+    Caledario Kinal
+  </a>
+
+  <span class="spacer"></span>
+
+  @if (authService.isAuthenticated()) {
+  <span class="user-greeting">{{ authService.currentUser()?.fullName }}</span>
+  <button mat-icon-button (click)="logout()" title="Cerrar sesión">
+    <mat-icon>logout</mat-icon>
+  </button>
+  } @else {
+  <button mat-button routerLink="/login" class="admin-login-btn">
+    <mat-icon>admin_panel_settings</mat-icon>
+    <span>Administración</span>
+  </button>
+  }
+</mat-toolbar>
+
+@if (authService.isAuthenticated()) {
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav [opened]="isSidenavOpen()" mode="side" class="app-sidenav">
+    <mat-nav-list>
+      @for (item of navItems; track item.route) {
+      @if (!item.adminOnly || authService.isAdmin()) {
+      <a mat-list-item [routerLink]="item.route" routerLinkActive="active-link" #rla="routerLinkActive"
+        [activated]="rla.isActive">
+        <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+        <span matListItemTitle>{{ item.label }}</span>
+      </a>
+      }
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="main-content">
+    <router-outlet />
+  </mat-sidenav-content>
+</mat-sidenav-container>
+} @else {
+<main class="public-main-content">
+  <router-outlet />
+</main>
+}

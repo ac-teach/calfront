@@ -1,22 +1,57 @@
-// 1. SIEMPRE en la primera línea del archivo:
 @use '@angular/material' as mat;
 
-html {
-  @include mat.theme((color: (primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
-      ),
-      typography: Roboto,
-      density: 0,
-    ));
+// Incluir estilos estructurales del core
+@include mat.core();
+
+// Definir tema Material 3 compatible
+$forma-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: light,
+      primary: mat.$azure-palette,
+      use-system-variables: true,
+    ),
+    typography: (
+      brand-family: 'Roboto, system-ui, -apple-system, sans-serif',
+      plain-family: 'Roboto, system-ui, -apple-system, sans-serif',
+    ),
+    density: (
+      scale: 0,
+    ),
+  )
+);
+
+// Aplicar el tema global
+:root {
+  @include mat.all-component-themes($forma-theme);
+
+  // Tokens de estilo "Forma"
+  --forma-bg-canvas: #f8fafc;
+  --forma-surface: #ffffff;
+  --forma-border: #e2e8f0;
+  --forma-radius: 6px;
 }
 
-// 2. Debajo de @use ya pueden ir el resto de tus estilos globales:
 html,
 body {
   height: 100%;
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  background-color: var(--forma-bg-canvas);
+  color: #1e293b;
 }
 
-body {
-  margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+// Aspecto geométrico limpio de Forma para Angular Material
+.mat-mdc-card {
+  border-radius: var(--forma-radius) !important;
+  border-color: var(--forma-border) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.mat-mdc-button-base {
+  border-radius: var(--forma-radius) !important;
+}
+
+.mat-mdc-text-field-wrapper {
+  border-radius: var(--forma-radius) !important;
 }

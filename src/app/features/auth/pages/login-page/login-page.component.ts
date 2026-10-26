@@ -55,7 +55,7 @@ export class LoginPageComponent {
     this.authService.login(credentials).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.router.navigate(['/calendar']);
+        this.router.navigate(['/events']);
       },
       error: (err: ApiError) => {
         this.isLoading.set(false);
@@ -64,5 +64,10 @@ export class LoginPageComponent {
         );
       },
     });
+  }
+  ngOnInit(): void {
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/events']);
+    }
   }
 }

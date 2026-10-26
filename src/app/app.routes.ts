@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, roleGuard } from './core/guards/auth.guard';
+import { RenderMode, ServerRoute } from '@angular/ssr';
 
 export const routes: Routes = [
   {
@@ -49,7 +50,7 @@ export const routes: Routes = [
   },
   {
     path: 'calendar',
-    //canActivate: [authGuard],
+    // canActivate: [authGuard],
     loadComponent: () =>
       import('./features/events/pages/calendar-page/calendar-page.component').then(
         (m) => m.CalendarPageComponent,
